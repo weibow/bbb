@@ -309,13 +309,15 @@ static irqreturn_t titsc_irq(int irq, void *dev)
 			 * Resistance(touch) = x plate resistance *
 			 * x postion/4096 * ((z2 / z1) - 1)
 			 */
-			z = z1 - z2;
+			z = z2 - z1;
 			z *= x;
 			z *= ts_dev->x_plate_resistance;
-			z /= z2;
+			z /= z1;
 			z = (z + 2047) >> 12;
 
 			if (z <= MAX_12BIT) {
+                x = MAX_12BIT - x;
+                y = MAX_12BIT - y;
 				input_report_abs(input_dev, ABS_X, x);
 				input_report_abs(input_dev, ABS_Y, y);
 				input_report_abs(input_dev, ABS_PRESSURE, z);
@@ -369,7 +371,7 @@ static int titsc_parse_dt(struct platform_device *pdev,
 			&ts_dev->coordinate_readouts);
 	if (err < 0) {
 		dev_warn(&pdev->dev, "please use 'ti,coordinate-readouts' instead\n");
-		err = of_property_read_u32(node, "ti,coordiante-readouts",
+		err = of_property_read_u32(node, "ti,coordinate-readouts",
 				&ts_dev->coordinate_readouts);
 	}
 
